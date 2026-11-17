@@ -79,6 +79,12 @@ curl -s -X POST localhost:8000/canary/start -d '{"scenario": "quality-drift"}'
 python -m genmedia_guard.loadgen --rps 20 --duration 300
 ```
 
+The dashboard after a `quality-drift` rollout (20 to 40 requests/s of load; the candidate starts at 5% of traffic, then the controller sets its weight to 0 because the output-drift gate fails, PSI 4.00 against a limit of 0.25):
+
+![Grafana dashboard: request rate, p95 latency, error ratio, canary weight and state during a rollback](docs/grafana-dashboard.png)
+
+The "Quality-gate failures by reason" panel stays empty in this run: blurry outputs pass the per-image sanity checks and are caught by the drift gate instead. Run `silent-collapse` to see that panel fill.
+
 Available scenarios: `healthy`, `slightly-slower`, `latency-regression`, `error-spike`, `quality-drift`, `silent-collapse`.
 
 ## Endpoints
@@ -122,7 +128,7 @@ tests/           unit tests, simulator scenarios, ASGI tests
 
 - **Simulated models.** Quality checks are generic image sanity checks plus a sharpness feature. A real deployment would add model-specific evaluation (for example safety classifiers, embedding-based drift, prompt-class-specific checks).
 - **In-process controller state.** The rollout state lives in memory, so the Kubernetes manifest runs one replica with a `Recreate` strategy. A multi-replica version needs shared state (for example a Redis-backed window) or a Kubernetes controller.
-- **Docker Compose and Kubernetes files are not exercised in CI.** They were validated as well-formed YAML and JSON, but I have not built the image or applied the manifests in a cluster. Treat them as a starting point.
+- **Docker Compose and Kubernetes files are not exercised in CI.** The Compose stack was built and run once by hand on Docker Desktop (Windows, WSL2) to produce the dashboard screenshot above. The Kubernetes manifests were only validated as well-formed YAML; I have not applied them in a cluster. Treat them as a starting point.
 - **Single-signal drift.** Drift uses one scalar feature (sharpness). It catches blur and collapse but not, say, subtle colour or composition shifts.
 
 ## Roadmap
