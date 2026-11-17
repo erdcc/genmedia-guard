@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: genmedia-guard
+  labels: { app: genmedia-guard }
+spec:
+  selector: { app: genmedia-guard }
+  ports:
+    - { name: http, port: 80, targetPort: http }

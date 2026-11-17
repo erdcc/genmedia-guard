@@ -1,0 +1,42 @@
+# NOTE: the canary controller keeps its state in process memory, so run exactly
+# one replica (see "Limitations" in the README).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genmedia-guard
+  labels: { app: genmedia-guard }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app: genmedia-guard }
+  template:
+    metadata:
+      labels: { app: genmedia-guard }
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 1000 }
+      containers:
+        - name: guard
+          image: genmedia-guard:0.1.0
+          ports: [{ containerPort: 8000, name: http }]
+          env:
+            - { name: GUARD_EVAL_INTERVAL_S, value: "5" }
+            - { name: GUARD_STEP_DURATION_S, value: "60" }
+            - { name: GUARD_MIN_REQUESTS, value: "100" }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 250m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true

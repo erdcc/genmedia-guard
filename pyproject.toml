@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "genmedia-guard"
+version = "0.1.0"
+description = "Reliability tooling for generative-media model APIs: SLO-gated canary rollouts, output-quality gates and drift detection."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["numpy>=1.24", "uvicorn>=0.23"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[tool.setuptools]
+packages = ["genmedia_guard"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
